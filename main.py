@@ -1,6 +1,5 @@
 import sqlite3
 
-from pathlib import Path
 from types import TracebackType
 from uuid import uuid4
 
@@ -34,19 +33,20 @@ class Database:
     def __init__(self):
         self.__createTaskTable()
 
-    def __getQueryFromSQLFile(self, filename: Path) -> str:
-        with open(filename, mode="rt") as sqlfile:
+    def __getQueryFromSQLFile(self, filename: str) -> str:
+        filepath = QUERIESDIRPATH / filename
+        with open(filepath, mode="rt") as sqlfile:
             queryContent = sqlfile.read()
             return queryContent
 
     def __createTaskTable(self):
-        query = self.__getQueryFromSQLFile(QUERIESDIRPATH / "createTaskTable.sql")
+        query = self.__getQueryFromSQLFile("createTaskTable.sql")
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query)
             self.__connection.commit()
 
     def GetTasksList(self) -> TasksTuplesList:
-        query = self.__getQueryFromSQLFile(QUERIESDIRPATH / "getTasks.sql")
+        query = self.__getQueryFromSQLFile("getTasks.sql")
 
         with SafeCursor(self.__connection) as cursor:
             response = cursor.execute(query)
@@ -55,7 +55,7 @@ class Database:
         return tasksList
 
     def AddTask(self, title: str, description: str, completed: bool = False):
-        query = self.__getQueryFromSQLFile(QUERIESDIRPATH / "addTask.sql")
+        query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
         hexadecimalString = randomUUID.hex[:5]
         params = (
