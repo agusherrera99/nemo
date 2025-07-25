@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS tasks (
     uuid TEXT,
     title TEXT,
     description TEXT,
-    completed INTEGER
+    state INTEGER
 );
