@@ -1,4 +1,4 @@
 INSERT OR ABORT INTO tasks
-('uuid', 'title', 'description', 'completed')
+('uuid', 'title', 'description', 'state')
 VALUES
 (?, ?, ?, ?);
