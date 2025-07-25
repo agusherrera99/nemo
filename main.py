@@ -2,6 +2,7 @@ import sqlite3
 
 from pathlib import Path
 from types import TracebackType
+from uuid import uuid4
 
 from src.constants import DATABASEPATH, QUERIESDIRPATH
 
@@ -55,7 +56,10 @@ class Database:
 
     def AddTask(self, title: str, description: str, completed: bool = False):
         query = self.__getQueryFromSQLFile(QUERIESDIRPATH / "addTask.sql")
+        randomUUID = uuid4()
+        hexadecimalString = randomUUID.hex[:5]
         params = (
+            hexadecimalString,
             title,
             description,
             completed,
