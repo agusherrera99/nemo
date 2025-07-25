@@ -68,3 +68,16 @@ class Database:
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query, params)
             self.__connection.commit()
+
+    def DeleteAllTasks(self):
+        query = self.__getQueryFromSQLFile("deleteAllTasks.sql")
+        with SafeCursor(self.__connection) as cursor:
+            cursor.execute(query)
+            self.__connection.commit()
+
+    def DeleteTask(self, hexUUID: str):
+        query = self.__getQueryFromSQLFile("deleteTask.sql")
+        params = (hexUUID,)
+        with SafeCursor(self.__connection) as cursor:
+            cursor.execute(query, params)
+            self.__connection.commit()
