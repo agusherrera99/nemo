@@ -3,6 +3,10 @@
 !.gitignore
 
 !main.py
+!src/
+!src/__init__.py
+!src/utils.py
+!src/constants.py
 
 !queries/
 !queries/*
