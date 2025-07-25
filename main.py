@@ -54,7 +54,7 @@ class Database:
 
         return tasksList
 
-    def AddTask(self, title: str, description: str, state: bool = False):
+    def AddTask(self, title: str, description: str, completed: bool = False):
         query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
         hexadecimalString = randomUUID.hex[:5]
@@ -62,7 +62,7 @@ class Database:
             hexadecimalString,
             title,
             description,
-            state,
+            completed,
         )
 
         with SafeCursor(self.__connection) as cursor:
