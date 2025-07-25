@@ -26,6 +26,9 @@ class SafeCursor:
 type TaskTuple = tuple[int, str, str, int]
 type TasksTuplesList = list[TaskTuple]
 
+COMPLETED = 1
+INCOMPLETED = 0
+
 
 class Database:
     __connection = sqlite3.connect(DATABASEPATH)
@@ -78,6 +81,20 @@ class Database:
     def DeleteTask(self, hexUUID: str):
         query = self.__getQueryFromSQLFile("deleteTask.sql")
         params = (hexUUID,)
+        with SafeCursor(self.__connection) as cursor:
+            cursor.execute(query, params)
+            self.__connection.commit()
+
+    def SetTaskAsCompleted(self, hexUUID: str):
+        query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
+        params = (COMPLETED, hexUUID)
+        with SafeCursor(self.__connection) as cursor:
+            cursor.execute(query, params)
+            self.__connection.commit()
+
+    def SetTaskAsIncompleted(self, hexUUID: str):
+        query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
+        params = (INCOMPLETED, hexUUID)
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query, params)
             self.__connection.commit()
