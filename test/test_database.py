@@ -1,7 +1,7 @@
 from unittest import TestCase
 from src.database import Database
 
-class DatabaseTestCase(TestCase):
+class TestDatabase(TestCase):
     def setUp(self):
         self.database = Database()
 
