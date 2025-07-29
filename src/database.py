@@ -1,6 +1,7 @@
 import sqlite3
 
 from types import TracebackType
+from typing import Optional
 from uuid import uuid4
 
 from src.constants import DATABASEPATH, QUERIESDIRPATH
@@ -56,7 +57,12 @@ class Database:
 
         return tasksList
 
-    def addTask(self, title: str, description: str, state: bool = False):
+    def addTask(
+        self,
+        title: Optional[str] = "write your title here",
+        description: Optional[str] = "write your description here",
+        state: Optional[bool] = False,
+    ) -> Optional[int]:
         query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
         hexadecimalString = randomUUID.hex[:5]
@@ -68,8 +74,11 @@ class Database:
         )
 
         with SafeCursor(self.__connection) as cursor:
-            cursor.execute(query, params)
+            response = cursor.execute(query, params)
+            result = response.fetchone()[0]
             self.__connection.commit()
+
+        return result
 
     def deleteAllTasks(self):
         query = self.__getQueryFromSQLFile("deleteAllTasks.sql")
