@@ -5,8 +5,9 @@
 !main.py
 !src/
 !src/__init__.py
-!src/utils.py
+!src/database.py
 !src/constants.py
+!src/utils.py
 
 !queries/
 !queries/*
