@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    uuid TEXT,
-    title TEXT,
-    description TEXT,
-    state INTEGER
+    uuid TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    state INTEGER NOT NULL
 );
