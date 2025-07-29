@@ -31,9 +31,8 @@ INCOMPLETED = 0
 
 
 class Database:
-    __connection = sqlite3.connect(DATABASEPATH)
-
     def __init__(self):
+        self.__connection = sqlite3.connect(DATABASEPATH)
         self.__createTaskTable()
 
     def __getQueryFromSQLFile(self, filename: str) -> str:
@@ -98,3 +97,7 @@ class Database:
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query, params)
             self.__connection.commit()
+
+    def close(self):
+        if self.__connection:
+            self.__connection.close()
