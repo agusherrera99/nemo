@@ -1,11 +1,9 @@
 from src.database import Database
 from unittest import TestCase
-from unittest.mock import patch
 
 class TestDatabase(TestCase):
     def setUp(self):
-        with patch("src.constants.DATABASEPATH", ":memory:"):
-            self.database = Database()
+        self.database = Database(":memory:")
 
     def tearDown(self) -> None:
         self.database.close()

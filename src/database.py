@@ -1,7 +1,8 @@
 import sqlite3
 
+from pathlib import Path
 from types import TracebackType
-from typing import Optional
+from typing import Optional, Union
 from uuid import uuid4
 
 from src.constants import DATABASEPATH, QUERIESDIRPATH
@@ -26,14 +27,17 @@ class SafeCursor:
 
 type TaskTuple = tuple[int, str, str, int]
 type TasksTuplesList = list[TaskTuple]
+type PathOrStr = Union[str, Path]
 
 COMPLETED = 1
 INCOMPLETED = 0
 
 
 class Database:
-    def __init__(self):
-        self.__connection = sqlite3.connect(DATABASEPATH)
+    def __init__(self, databasePath: Optional[PathOrStr] = None):
+        if databasePath is None:
+            databasePath = DATABASEPATH
+        self.__connection = sqlite3.connect(databasePath)
         self.__createTaskTable()
 
     def __getQueryFromSQLFile(self, filename: str) -> str:
