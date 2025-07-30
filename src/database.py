@@ -25,7 +25,7 @@ class SafeCursor:
         self.cursor.close()
 
 
-type TaskTuple = tuple[int, str, str, int]
+type TaskTuple = tuple[int, str, str, str, int]
 type TasksTuplesList = list[TaskTuple]
 type PathOrStr = Union[str, Path]
 
@@ -52,25 +52,25 @@ class Database:
             cursor.execute(query)
             self.__connection.commit()
 
-    def getTasksList(self) -> TasksTuplesList:
+    def getTasksTupleList(self) -> TasksTuplesList:
         query = self.__getQueryFromSQLFile("getTasks.sql")
 
         with SafeCursor(self.__connection) as cursor:
             response = cursor.execute(query)
-            tasksList = response.fetchall()
+            tasksTupleList = response.fetchall()
 
-        return tasksList
+        return tasksTupleList
 
     def addTask(
         self,
-        title: Optional[str] = "write your title here",
-        description: Optional[str] = "write your description here",
+        title: str,
+        description: str,
         state: Optional[bool] = False,
     ) -> tuple[str]:
         query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
-        hexadecimalString = randomUUID.hex[:5]
-        
+        hexadecimalString = randomUUID.hex[:8]
+
         stateValue = COMPLETED if state else INCOMPLETED
 
         params = (
@@ -85,8 +85,8 @@ class Database:
             result = response.fetchone()
             if result is None:
                 raise sqlite3.Error("task insertion should return UUID value")
+            self.__connection.commit()
 
-        self.__connection.commit()
         return result
 
     def deleteAllTasks(self):
@@ -94,6 +94,10 @@ class Database:
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query)
             self.__connection.commit()
+        
+        tasksTupleList = self.getTasksTupleList()
+        success = True if len(tasksTupleList) else False
+        return success
 
     def deleteTask(self, hexUUID: str) -> bool:
         query = self.__getQueryFromSQLFile("deleteTask.sql")
@@ -103,11 +107,10 @@ class Database:
             result = response.fetchone()
             if result is None:
                 raise sqlite3.Error("task deletion should return UUID value")
-        
-        self.__connection.commit()
-        if result[0]:
-            return True
-        return False
+            self.__connection.commit()
+
+        success = True if result[0] else False
+        return success
 
     def setTaskAsCompleted(self, hexUUID: str):
         query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
