@@ -1,2 +1,3 @@
 DELETE FROM tasks
-WHERE uuid = ?;
+WHERE uuid = ?
+RETURNING uuid;

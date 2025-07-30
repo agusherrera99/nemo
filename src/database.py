@@ -95,12 +95,19 @@ class Database:
             cursor.execute(query)
             self.__connection.commit()
 
-    def deleteTask(self, hexUUID: str):
+    def deleteTask(self, hexUUID: str) -> bool:
         query = self.__getQueryFromSQLFile("deleteTask.sql")
         params = (hexUUID,)
         with SafeCursor(self.__connection) as cursor:
-            cursor.execute(query, params)
-            self.__connection.commit()
+            response = cursor.execute(query, params)
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("task deletion should return UUID value")
+        
+        self.__connection.commit()
+        if result[0]:
+            return True
+        return False
 
     def setTaskAsCompleted(self, hexUUID: str):
         query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
