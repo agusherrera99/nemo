@@ -66,22 +66,27 @@ class Database:
         title: Optional[str] = "write your title here",
         description: Optional[str] = "write your description here",
         state: Optional[bool] = False,
-    ) -> Optional[int]:
+    ) -> tuple[str]:
         query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
         hexadecimalString = randomUUID.hex[:5]
+        
+        stateValue = COMPLETED if state else INCOMPLETED
+
         params = (
             hexadecimalString,
             title,
             description,
-            state,
+            stateValue,
         )
 
         with SafeCursor(self.__connection) as cursor:
             response = cursor.execute(query, params)
-            result = response.fetchone()[0]
-            self.__connection.commit()
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("task insertion should return UUID value")
 
+        self.__connection.commit()
         return result
 
     def deleteAllTasks(self):
