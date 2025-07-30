@@ -1,5 +1,114 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
+from collections.abc import Sequence
+from typing import Optional
+
+from src.database import Database
+
 
 class Interface:
     def __init__(self) -> None:
-        self.parser = ArgumentParser(prog="Nemo", description="CLI task manager")
+        self.database = Database()
+        self.parser = ArgumentParser(prog="nemo", description="CLI task manager")
+
+        self._setupArguments()
+
+    def _setupList(self):
+        self.subparsers.add_parser("list", help="Get tasks list")
+    
+    def _setupDelete(self):
+        deleteSubparser = self.subparsers.add_parser("delete", help="Delete one task at a time or all of them")
+        
+        group = deleteSubparser.add_mutually_exclusive_group(required=True)
+        
+        group.add_argument(
+            "-a",
+            "--all",
+            action="store_true",
+            help="Delete all tasks"
+        )
+        group.add_argument(
+            "-u",
+            "--uuid",
+            type=str,
+            help='Delete a task by passing his UUID; nemo delete -u "98c6078d"'
+        )
+
+    def _setupAdd(self):
+        addSubparser = self.subparsers.add_parser("add", help="Add a new task")
+        addSubparser.add_argument(
+            "-t",
+            "--title",
+            type=str,
+            default="untitle task",
+            help='Task title (default: untitled task); e.g nemo add -t "some title"',
+        )
+        addSubparser.add_argument(
+            "-d",
+            "--description",
+            type=str,
+            default="no description provided",
+            help='Task Description (default: no description provided); e.g nemo add -d "some description"',
+        )
+
+    def _setupArguments(self):
+        self.subparsers = self.parser.add_subparsers(
+            dest="command", help="Available commands"
+        )
+
+        self._setupList()
+        self._setupAdd()
+        self._setupDelete()
+
+    def _handleGetTasksList(self):
+        taskTupleList = self.database.getTasksTupleList()
+        for taskTuple in taskTupleList:
+            _, hexUUID, title, description, status = taskTuple
+            statusParse = "Incomplete" if status == 0 else "Completed"
+            
+            print(f"- {title.capitalize()} | {statusParse} | #{hexUUID}")
+            print(f"\t{description.capitalize()}\n")
+
+    def _handleAdd(self, args: Namespace):
+        title: str = args.title.lower()
+        description: str = args.description.lower()
+
+        print(f"Adding task: {title.capitalize()} {description.capitalize()}...")
+        result = self.database.addTask(title, description)
+        hexUUID: str = result[0]
+        print(f"Task added successfully with UUID: #{hexUUID}")
+
+    def _handleDelete(self, args: Namespace):
+        if args.all:
+            print("Deleting all tasks...")
+            success = self.database.deleteAllTasks()
+            if success:
+                print("All tasks deleted successfully")
+            else:
+                print("Has occurred an error when delete all tasks, please try again")
+        elif args.uuid:
+            hexUUID = args.uuid
+
+            print(f"Deleting task with UUID: #{hexUUID}...")
+            success = self.database.deleteTask(hexUUID)
+            if success:
+                print("Deletion successfully")
+            else:
+                print("Has occurred an error when delete the task, please try again")
+        else:
+            print("Error: You must specify either -a/--all or -u/--uuid")
+            print("Use 'nemo delete --help' for more information")
+
+    def parseArgs(self, args: Optional[Sequence[str]] = None):
+        return self.parser.parse_args(args)
+
+    def execute(self, args: Optional[Sequence[str]] = None):
+        parsedArgs = self.parseArgs(args)
+
+        if parsedArgs.command == "list":
+            self._handleGetTasksList()
+        elif parsedArgs.command == "add":
+            self._handleAdd(parsedArgs)
+        elif parsedArgs.command == "delete":
+            self._handleDelete(parsedArgs)
+        else:
+            self.parser.print_help()
