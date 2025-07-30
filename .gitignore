@@ -2,7 +2,7 @@
 
 !.gitignore
 
-!main.py
+!nemo.py
 !src/
 !src/__init__.py
 !src/constants.py

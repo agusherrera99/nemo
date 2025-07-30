@@ -10,7 +10,7 @@ class TestDatabase(TestCase):
         self.database.close()
 
     def _get_tasks_count(self) -> int:
-        return len(self.database.getTasksList())
+        return len(self.database.getTasksTupleList())
 
     def _assert_tasks_count(self, expectedCount: int, message: str = ""):
         actualCount = self._get_tasks_count()
@@ -41,12 +41,12 @@ class TestDatabase(TestCase):
         self.assertNotEqual(hexUUID1, hexUUID2)
 
     def test_get_tasks_list_empty(self):
-        tasks = self.database.getTasksList()
+        tasks = self.database.getTasksTupleList()
         self.assertEqual(tasks, [])
 
     def test_get_tasks_list_with_tasks(self):
         self.database.addTask("test title", "test description")
-        tasks = self.database.getTasksList()
+        tasks = self.database.getTasksTupleList()
         self.assertGreater(len(tasks), 0)
 
     def test_delete_task(self):
