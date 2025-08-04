@@ -1,1 +1,1 @@
-SELECT id, uuid, title, description, state FROM tasks;
+SELECT id, uuid, title, description, pin, state FROM tasks;
