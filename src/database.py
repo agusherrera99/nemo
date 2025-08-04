@@ -1,5 +1,6 @@
 import sqlite3
 
+from enum import Enum
 from pathlib import Path
 from types import TracebackType
 from typing import Optional, Union
@@ -29,8 +30,25 @@ type TaskTuple = tuple[int, str, str, str, int]
 type TasksTuplesList = list[TaskTuple]
 type PathOrStr = Union[str, Path]
 
-COMPLETED = 1
-INCOMPLETED = 0
+
+class TaskStates(Enum):
+    INCOMPLETED = 0
+    COMPLETED = 1
+    IN_PROGRESS = 2
+
+    @classmethod
+    def validateValue(cls, value: int):
+        minimum = cls.INCOMPLETED.value
+        maximux = cls.IN_PROGRESS.value
+        if not (minimum <= value <= maximux):
+            raise ValueError(f"{value} must be in range [{minimum, maximux}]")
+
+    @classmethod
+    def getStateValueByStr(cls, stateStr: str):
+        if cls[stateStr]:
+            stateValue: int = cls[stateStr].value
+            cls.validateValue(stateValue)
+            return stateValue
 
 
 class Database:
@@ -65,13 +83,12 @@ class Database:
         self,
         title: str,
         description: str,
-        state: Optional[bool] = False,
     ) -> tuple[str]:
         query = self.__getQueryFromSQLFile("addTask.sql")
         randomUUID = uuid4()
         hexadecimalString = randomUUID.hex[:8]
 
-        stateValue = COMPLETED if state else INCOMPLETED
+        stateValue = TaskStates.INCOMPLETED.value
 
         params = (
             hexadecimalString,
@@ -94,7 +111,7 @@ class Database:
         with SafeCursor(self.__connection) as cursor:
             cursor.execute(query)
             self.__connection.commit()
-        
+
         tasksTupleList = self.getTasksTupleList()
         success = True if len(tasksTupleList) else False
         return success
@@ -112,19 +129,49 @@ class Database:
         success = True if result[0] else False
         return success
 
-    def setTaskAsCompleted(self, hexUUID: str):
-        query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
-        params = (COMPLETED, hexUUID)
+    def updateTaskTitle(self, hexUUID: str, newTitle: str) -> bool:
+        query = self.__getQueryFromSQLFile("updateTaskTitleValue.sql")
+
+        params = (newTitle, hexUUID)
         with SafeCursor(self.__connection) as cursor:
-            cursor.execute(query, params)
+            response = cursor.execute(query, params)
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("title task update should return UUID value")
             self.__connection.commit()
 
-    def setTaskAsIncompleted(self, hexUUID: str):
-        query = self.__getQueryFromSQLFile("setTaskCompletedValue.sql")
-        params = (INCOMPLETED, hexUUID)
+        success = True if result[0] else False
+        return success
+
+    def updateTaskDescription(self, hexUUID: str, newDescription: str) -> bool:
+        query = self.__getQueryFromSQLFile("updateTaskDescriptionValue.sql")
+
+        params = (newDescription, hexUUID)
         with SafeCursor(self.__connection) as cursor:
-            cursor.execute(query, params)
+            response = cursor.execute(query, params)
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("description task update should return UUID value")
             self.__connection.commit()
+
+        success = True if result[0] else False
+        return success
+
+    def updateTaskState(self, hexUUID: str, newState: str) -> bool:
+        query = self.__getQueryFromSQLFile("updateTaskStateValue.sql")
+
+        stateValue = TaskStates.getStateValueByStr(newState)
+
+        params = (stateValue, hexUUID)
+        with SafeCursor(self.__connection) as cursor:
+            response = cursor.execute(query, params)
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("state task update should return UUID value")
+            self.__connection.commit()
+
+        success = True if result[0] else False
+        return success
 
     def close(self):
         if self.__connection:
