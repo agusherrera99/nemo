@@ -3,15 +3,12 @@
 !.gitignore
 
 !nemo.py
+
 !src/
-!src/__init__.py
-!src/constants.py
-!src/database.py
-!src/interface.py
-!src/utils.py
+!src/*.py
 
 !test/
-!test_database.py
+!test/*.py
 
 !queries/
 !queries/*
