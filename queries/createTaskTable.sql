@@ -3,5 +3,6 @@ CREATE TABLE IF NOT EXISTS tasks (
     uuid TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
+    pin INTEGER NOT NULL,
     state INTEGER NOT NULL
 ) STRICT;
