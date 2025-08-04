@@ -65,21 +65,21 @@ class Interface:
             "-t",
             "--title",
             type=str,
-            help="Update the title of a task"
+            help="Update the title of a task; nemo update -u '2a712be5' -t 'New title'"
         )
 
         updateSubparser.add_argument(
             "-d",
             "--description",
             type=str,
-            help="Update the description of a task"
+            help="Update the description of a task; nemo update -u '2a712be5' -d 'New description'"
         )
 
         updateSubparser.add_argument(
             "-s",
             "--state",
             choices=["completed", "incompleted", "in_progress"],
-            help="Update the state of a task"
+            help="Update the state of a task; nemo update -u '2a712be5' -s in_progress"
         )
 
     def _setupArguments(self):
@@ -92,13 +92,14 @@ class Interface:
         self._setupDelete()
         self._setupUpdate()
 
-    def _handleGetTasksList(self):
+    def _handleList(self):
         taskTupleList = self.database.getTasksTupleList()
         taskTupleListLength = len(taskTupleList)
+        statusMap = {0: "Incompleted", 1: "Completed", 2: "In progress"}
         if taskTupleListLength > 0:
             for taskTuple in taskTupleList:
                 _, hexUUID, title, description, status = taskTuple
-                statusParse = "Incomplete" if status == 0 else "Completed"
+                statusParse = statusMap.get(status, "Unknown")
                 
                 print(f"- {title.capitalize()} | {statusParse} | #{hexUUID}")
                 print(f"\t{description.capitalize()}\n")
@@ -170,7 +171,7 @@ class Interface:
         parsedArgs = self.parseArgs(args)
 
         if parsedArgs.command == "list":
-            self._handleGetTasksList()
+            self._handleList()
         elif parsedArgs.command == "add":
             self._handleAdd(parsedArgs)
         elif parsedArgs.command == "delete":
