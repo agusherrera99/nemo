@@ -26,7 +26,7 @@ class SafeCursor:
         self.cursor.close()
 
 
-type TaskTuple = tuple[int, str, str, str, int]
+type TaskTuple = tuple[int, str, str, str, int, int]
 type TasksTuplesList = list[TaskTuple]
 type PathOrStr = Union[str, Path]
 
@@ -56,6 +56,7 @@ class Database:
         with SafeCursor(self.__connection) as cursor:
             response = cursor.execute(query)
             tasksTupleList = response.fetchall()
+            print(tasksTupleList)
 
         return tasksTupleList
 
@@ -74,7 +75,7 @@ class Database:
             hexadecimalString,
             title,
             description,
-            TaskPinStates.UNPINNED,
+            TaskPinStates.UNPINNED.value,
             stateValue,
         )
 
@@ -150,10 +151,9 @@ class Database:
             if result is None:
                 raise sqlite3.Error("pin state task update should return UUID value")
             self.__connection.commit()
-        
+
         success = True if result[0] else False
         return success
-
 
     def updateTaskState(self, hexUUID: str, newState: str) -> bool:
         query = self.__getQueryFromSQLFile("updateTaskStateValue.sql")
