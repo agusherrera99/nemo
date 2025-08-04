@@ -50,13 +50,22 @@ class Database:
             cursor.execute(query)
             self.__connection.commit()
 
+    def _pinnedFirst(self, taskTuple: TaskTuple) -> bool:
+        pinStateValue = taskTuple[4]
+        isPinned = pinStateValue == TaskPinStates.PINNED.value
+        return isPinned
+
     def getTasksTupleList(self) -> TasksTuplesList:
         query = self.__getQueryFromSQLFile("getTasks.sql")
 
         with SafeCursor(self.__connection) as cursor:
             response = cursor.execute(query)
             tasksTupleList = response.fetchall()
-            print(tasksTupleList)
+
+        tasksTupleList.sort(
+            key=self._pinnedFirst,
+            reverse=True,
+        )
 
         return tasksTupleList
 
@@ -140,7 +149,7 @@ class Database:
         return success
 
     def updateTaskPin(self, hexUUID: str, newPinState: str) -> bool:
-        query = self.__getQueryFromSQLFile("updateTaskPinValue.sql")
+        query = self.__getQueryFromSQLFile("updateTaskPinStateValue.sql")
 
         pinStateValue = TaskPinStates.getPinStateValueByStr(newPinState)
 
