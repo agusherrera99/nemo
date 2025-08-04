@@ -50,6 +50,38 @@ class Interface:
             help='Task Description (default: no description provided); e.g nemo add -d "some description"',
         )
 
+    def _setupUpdate(self):
+        updateSubparser = self.subparsers.add_parser("update", help="Update task info")
+
+        updateSubparser.add_argument(
+            "-u",
+            "--uuid",
+            type=str,
+            required=True,
+            help='Indicate the task to update by its UUID; nemo update -u "2a712be5"'
+        )
+
+        updateSubparser.add_argument(
+            "-t",
+            "--title",
+            type=str,
+            help="Update the title of a task"
+        )
+
+        updateSubparser.add_argument(
+            "-d",
+            "--description",
+            type=str,
+            help="Update the description of a task"
+        )
+
+        updateSubparser.add_argument(
+            "-s",
+            "--state",
+            choices=["completed", "incompleted", "in_progress"],
+            help="Update the state of a task"
+        )
+
     def _setupArguments(self):
         self.subparsers = self.parser.add_subparsers(
             dest="command", help="Available commands"
@@ -58,6 +90,7 @@ class Interface:
         self._setupList()
         self._setupAdd()
         self._setupDelete()
+        self._setupUpdate()
 
     def _handleGetTasksList(self):
         taskTupleList = self.database.getTasksTupleList()
@@ -102,6 +135,34 @@ class Interface:
             print("Error: You must specify either -a/--all or -u/--uuid")
             print("Use 'nemo delete --help' for more information")
 
+    def _handleUpdate(self, args: Namespace):
+        hexUUID = args.uuid
+
+        if args.title:
+            newTitle: str = args.title
+            print(f"Updating title of task: {hexUUID}...")
+            success = self.database.updateTaskTitle(hexUUID, newTitle.lower())
+            if success:
+                print("Title updated successfully")
+            else:
+                print("Has occurred an error when update the title task, please try again")
+        elif args.description:
+            newDescription: str = args.description
+            print(f"Updating description of task: {hexUUID}...")
+            success = self.database.updateTaskDescription(hexUUID, newDescription.lower())
+            if success:
+                print("Description updated successfully")
+            else:
+                print("Has occurred an error when update the description task, please try again")
+        elif args.state:
+            newState: str = args.state
+            print(f"Updating state of task: {hexUUID}...")
+            success = self.database.updateTaskState(hexUUID, newState.upper())
+            if success:
+                print("State updated successfully")
+            else:
+                print("Has occurred an error when update the state task, please try again")
+
     def parseArgs(self, args: Optional[Sequence[str]] = None):
         return self.parser.parse_args(args)
 
@@ -114,5 +175,7 @@ class Interface:
             self._handleAdd(parsedArgs)
         elif parsedArgs.command == "delete":
             self._handleDelete(parsedArgs)
+        elif parsedArgs.command == "update":
+            self._handleUpdate(parsedArgs)
         else:
             self.parser.print_help()
