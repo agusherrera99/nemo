@@ -1,3 +1,4 @@
 UPDATE OR ABORT tasks
 SET state = ?
-WHERE uuid = ?;
+WHERE uuid = ?
+RETURNING uuid;
