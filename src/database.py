@@ -1,12 +1,12 @@
 import sqlite3
 
-from enum import Enum
 from pathlib import Path
 from types import TracebackType
 from typing import Optional, Union
 from uuid import uuid4
 
 from src.constants import DATABASEPATH, QUERIESDIRPATH
+from src.enums import TaskPinStates, TaskStates
 
 
 class SafeCursor:
@@ -29,26 +29,6 @@ class SafeCursor:
 type TaskTuple = tuple[int, str, str, str, int]
 type TasksTuplesList = list[TaskTuple]
 type PathOrStr = Union[str, Path]
-
-
-class TaskStates(Enum):
-    INCOMPLETED = 0
-    COMPLETED = 1
-    IN_PROGRESS = 2
-
-    @classmethod
-    def validateValue(cls, value: int):
-        minimum = cls.INCOMPLETED.value
-        maximux = cls.IN_PROGRESS.value
-        if not (minimum <= value <= maximux):
-            raise ValueError(f"{value} must be in range [{minimum, maximux}]")
-
-    @classmethod
-    def getStateValueByStr(cls, stateStr: str):
-        if cls[stateStr]:
-            stateValue: int = cls[stateStr].value
-            cls.validateValue(stateValue)
-            return stateValue
 
 
 class Database:
@@ -94,6 +74,7 @@ class Database:
             hexadecimalString,
             title,
             description,
+            TaskPinStates.UNPINNED,
             stateValue,
         )
 
@@ -156,6 +137,23 @@ class Database:
 
         success = True if result[0] else False
         return success
+
+    def updateTaskPin(self, hexUUID: str, newPinState: str) -> bool:
+        query = self.__getQueryFromSQLFile("updateTaskPinValue.sql")
+
+        pinStateValue = TaskPinStates.getPinStateValueByStr(newPinState)
+
+        params = (pinStateValue, hexUUID)
+        with SafeCursor(self.__connection) as cursor:
+            response = cursor.execute(query, params)
+            result = response.fetchone()
+            if result is None:
+                raise sqlite3.Error("pin state task update should return UUID value")
+            self.__connection.commit()
+        
+        success = True if result[0] else False
+        return success
+
 
     def updateTaskState(self, hexUUID: str, newState: str) -> bool:
         query = self.__getQueryFromSQLFile("updateTaskStateValue.sql")
