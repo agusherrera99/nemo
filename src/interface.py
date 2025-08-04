@@ -95,13 +95,17 @@ class Interface:
     def _handleList(self):
         taskTupleList = self.database.getTasksTupleList()
         taskTupleListLength = len(taskTupleList)
+
+        pinMap = {0: "Unpinned", 1: "Pinned"}
         statusMap = {0: "Incompleted", 1: "Completed", 2: "In progress"}
+
         if taskTupleListLength > 0:
             for taskTuple in taskTupleList:
-                _, hexUUID, title, description, status = taskTuple
+                _, hexUUID, title, description, pinState, status = taskTuple
+                pinParse = pinMap.get(pinState, "Unknown")
                 statusParse = statusMap.get(status, "Unknown")
                 
-                print(f"- {title.capitalize()} | {statusParse} | #{hexUUID}")
+                print(f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}")
                 print(f"\t{description.capitalize()}\n")
         else:
             print("There are not registered tasks")
