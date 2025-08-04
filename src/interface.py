@@ -61,12 +61,16 @@ class Interface:
 
     def _handleGetTasksList(self):
         taskTupleList = self.database.getTasksTupleList()
-        for taskTuple in taskTupleList:
-            _, hexUUID, title, description, status = taskTuple
-            statusParse = "Incomplete" if status == 0 else "Completed"
-            
-            print(f"- {title.capitalize()} | {statusParse} | #{hexUUID}")
-            print(f"\t{description.capitalize()}\n")
+        taskTupleListLength = len(taskTupleList)
+        if taskTupleListLength > 0:
+            for taskTuple in taskTupleList:
+                _, hexUUID, title, description, status = taskTuple
+                statusParse = "Incomplete" if status == 0 else "Completed"
+                
+                print(f"- {title.capitalize()} | {statusParse} | #{hexUUID}")
+                print(f"\t{description.capitalize()}\n")
+        else:
+            print("There are not registered tasks")
 
     def _handleAdd(self, args: Namespace):
         title: str = args.title.lower()
