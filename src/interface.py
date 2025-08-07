@@ -14,24 +14,6 @@ class Interface:
 
     def _setupList(self):
         self.subparsers.add_parser("list", help="Get tasks list")
-    
-    def _setupDelete(self):
-        deleteSubparser = self.subparsers.add_parser("delete", help="Delete one task at a time or all of them")
-        
-        group = deleteSubparser.add_mutually_exclusive_group(required=True)
-        
-        group.add_argument(
-            "-a",
-            "--all",
-            action="store_true",
-            help="Delete all tasks"
-        )
-        group.add_argument(
-            "-u",
-            "--uuid",
-            type=str,
-            help='Delete a task by passing his UUID; nemo delete -u "98c6078d"'
-        )
 
     def _setupAdd(self):
         addSubparser = self.subparsers.add_parser("add", help="Add a new task")
@@ -48,6 +30,29 @@ class Interface:
             type=str,
             default="no description provided",
             help='Task Description (default: no description provided); e.g nemo add -d "some description"',
+        )
+        addSubparser.add_argument(
+            "--et",
+            type=str,
+            help="Estimated task time expressed in days from now; e.g nemo add --et 5 (in 5 days)"
+        )
+
+    def _setupDelete(self):
+        deleteSubparser = self.subparsers.add_parser("delete", help="Delete one task at a time or all of them")
+        
+        group = deleteSubparser.add_mutually_exclusive_group(required=True)
+        
+        group.add_argument(
+            "-a",
+            "--all",
+            action="store_true",
+            help="Delete all tasks"
+        )
+        group.add_argument(
+            "-u",
+            "--uuid",
+            type=str,
+            help='Delete a task by passing his UUID; nemo delete -u "98c6078d"'
         )
 
     def _setupUpdate(self):
@@ -101,11 +106,13 @@ class Interface:
 
         if taskTupleListLength > 0:
             for taskTuple in taskTupleList:
-                _, hexUUID, title, description, pinState, status = taskTuple
+                _, hexUUID, title, description, estimatedTime, pinState, status = taskTuple
                 pinParse = pinMap.get(pinState, "Unknown")
                 statusParse = statusMap.get(status, "Unknown")
                 
                 print(f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}")
+                if estimatedTime:
+                    print(f"Estimated Time: {estimatedTime}")
                 print(f"\t{description.capitalize()}\n")
         else:
             print("There are not registered tasks")
@@ -113,9 +120,10 @@ class Interface:
     def _handleAdd(self, args: Namespace):
         title: str = args.title.lower()
         description: str = args.description.lower()
+        estimatedTime = args.et            
 
         print(f"Adding task: {title.capitalize()} {description.capitalize()}...")
-        result = self.database.addTask(title, description)
+        result = self.database.addTask(title, description, estimatedTime)
         hexUUID: str = result[0]
         print(f"Task added successfully with UUID: #{hexUUID}")
 
