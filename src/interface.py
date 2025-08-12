@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 from typing import Optional
@@ -110,9 +112,12 @@ class Interface:
                 pinParse = pinMap.get(pinState, "Unknown")
                 statusParse = statusMap.get(status, "Unknown")
                 
-                print(f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}")
+                header = f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}"
                 if estimatedDeadline:
-                    print(f"Estimated Time: {estimatedDeadline}")
+                    estimatedDeadlineDatetime = datetime.strptime(estimatedDeadline, "%Y-%m-%d %H:%M:%S.%f")
+                    formatedEstimatedDeadline = datetime.strftime(estimatedDeadlineDatetime, "%d/%m/%Y %H:%M:%S")
+                    header += f" | {formatedEstimatedDeadline}"
+                print(header)
                 print(f"\t{description.capitalize()}\n")
         else:
             print("There are not registered tasks")
@@ -120,7 +125,7 @@ class Interface:
     def _handleAdd(self, args: Namespace):
         title: str = args.title.lower()
         description: str = args.description.lower()
-        estimatedDeadline = args.et            
+        estimatedDeadline = int(args.et)            
 
         print(f"Adding task: {title.capitalize()} {description.capitalize()}...")
         result = self.database.addTask(title, description, estimatedDeadline)
