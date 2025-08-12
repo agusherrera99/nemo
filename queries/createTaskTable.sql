@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     uuid TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    estimatedTime TEXT,
+    estimatedDeadline TEXT,
     pin INTEGER NOT NULL,
     state INTEGER NOT NULL
 ) STRICT;

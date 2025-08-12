@@ -1,5 +1,5 @@
 INSERT OR ABORT INTO tasks
-('uuid', 'title', 'description', 'estimatedTime', 'pin', 'state')
+('uuid', 'title', 'description', 'estimatedDeadline', 'pin', 'state')
 VALUES
 (?, ?, ?, ?, ?, ?)
 RETURNING uuid;
