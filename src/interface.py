@@ -106,13 +106,13 @@ class Interface:
 
         if taskTupleListLength > 0:
             for taskTuple in taskTupleList:
-                _, hexUUID, title, description, estimatedTime, pinState, status = taskTuple
+                _, hexUUID, title, description, estimatedDeadline, pinState, status = taskTuple
                 pinParse = pinMap.get(pinState, "Unknown")
                 statusParse = statusMap.get(status, "Unknown")
                 
                 print(f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}")
-                if estimatedTime:
-                    print(f"Estimated Time: {estimatedTime}")
+                if estimatedDeadline:
+                    print(f"Estimated Time: {estimatedDeadline}")
                 print(f"\t{description.capitalize()}\n")
         else:
             print("There are not registered tasks")
@@ -120,10 +120,10 @@ class Interface:
     def _handleAdd(self, args: Namespace):
         title: str = args.title.lower()
         description: str = args.description.lower()
-        estimatedTime = args.et            
+        estimatedDeadline = args.et            
 
         print(f"Adding task: {title.capitalize()} {description.capitalize()}...")
-        result = self.database.addTask(title, description, estimatedTime)
+        result = self.database.addTask(title, description, estimatedDeadline)
         hexUUID: str = result[0]
         print(f"Task added successfully with UUID: #{hexUUID}")
 
