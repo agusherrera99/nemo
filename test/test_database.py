@@ -23,7 +23,7 @@ class TestDatabase(TestCase):
     def test_add_task(self):
         self._assert_tasks_count(0)
 
-        result = self.database.addTask("test title", "test description", 2)
+        result = self.database.addTask("test title", "test description")
         hexUUID = result[0]
         self.assertIsNotNone(hexUUID)
 
@@ -32,8 +32,8 @@ class TestDatabase(TestCase):
     def test_add_multiple_tasks(self):
         self._assert_tasks_count(0)
 
-        task1 = self.database.addTask("title 1", "description 1", 2)
-        task2 = self.database.addTask("title 2", "description 2", 2)
+        task1 = self.database.addTask("title 1", "description 1")
+        task2 = self.database.addTask("title 2", "description 2")
         self._assert_tasks_count(2)
 
         self.assertIsNotNone(hexUUID1 := task1[0])
@@ -45,14 +45,14 @@ class TestDatabase(TestCase):
         self.assertEqual(tasks, [])
 
     def test_get_tasks_list_with_tasks(self):
-        self.database.addTask("test title", "test description", 2)
+        self.database.addTask("test title", "test description")
         tasks = self.database.getTasksTupleList()
         self.assertGreater(len(tasks), 0)
 
     def test_delete_task(self):
         self._assert_tasks_count(0)
 
-        addResult = self.database.addTask("test title", "test description", 2)
+        addResult = self.database.addTask("test title", "test description")
         self._assert_tasks_count(1)
 
         hexUUID = addResult[0]
@@ -64,9 +64,9 @@ class TestDatabase(TestCase):
     def test_delete_all_tasks(self):
         self._assert_tasks_count(0)
 
-        self.database.addTask("test title 1", "test description 1", 2)
-        self.database.addTask("test title 1", "test description 1", 2)
-        self.database.addTask("test title 1", "test description 1", 2)
+        self.database.addTask("test title 1", "test description 1")
+        self.database.addTask("test title 1", "test description 1")
+        self.database.addTask("test title 1", "test description 1")
         self._assert_tasks_count(3)
 
         self.database.deleteAllTasks()
@@ -102,21 +102,6 @@ class TestDatabase(TestCase):
 
         self.assertNotEqual(oldDescription, newDescription)
 
-    def test_update_task_estimated_time(self):
-        self._assert_tasks_count(0)
-
-        result = self.database.addTask("test title", "test descripiton", 2)
-        taskHexUUID = result[0]
-        self._assert_tasks_count(1)
-
-        taskTupleList = self.database.getTasksTupleList()
-        oldEstimatedTime = taskTupleList[0][4]
-
-        self.database.updateTaskEstimatedTime(taskHexUUID, 4)
-        newEstimatedTime = taskTupleList[0][4]
-
-        self.assertNotEqual(oldEstimatedTime, newEstimatedTime)
-
     def test_update_task_pin_state(self):
         self._assert_tasks_count(0)
 
@@ -126,7 +111,7 @@ class TestDatabase(TestCase):
         taskTupleList = self.database.getTasksTupleList()
         oldPinState = taskTupleList[0][5]
 
-        self.database.updateTaskPinState(taskHexUUID, "PINNED")
+        self.database.updateTaskPin(taskHexUUID, "PINNED")
         taskTupleList = self.database.getTasksTupleList()
         newPinState = taskTupleList[0][5]
 
@@ -146,3 +131,48 @@ class TestDatabase(TestCase):
         newTupleState = taskTupleList[0][6]
 
         self.assertNotEqual(oldTaskState, newTupleState)
+
+    def test_update_task_estimated_deadline_increase(self):
+        self._assert_tasks_count(0)
+        result = self.database.addTask("title", "desc", 2)
+        hexUUID = result[0]
+        self._assert_tasks_count(1)
+
+        oldDeadline = self.database.getTasksTupleList()[0][4]
+
+        update_result = self.database.updateTaskEstimatedDeadline(hexUUID, 3)
+        self.assertTrue(update_result, "Deadline update should return True")
+
+        newDeadline = self.database.getTasksTupleList()[0][4]
+        self.assertNotEqual(oldDeadline, newDeadline)
+        self.assertGreater(newDeadline, oldDeadline)
+
+    def test_update_task_estimated_deadline_decrease(self):
+        self._assert_tasks_count(0)
+        result = self.database.addTask("title", "desc", 5)
+        hexUUID = result[0]
+        self._assert_tasks_count(1)
+
+        oldDeadline = self.database.getTasksTupleList()[0][4]
+
+        update_result = self.database.updateTaskEstimatedDeadline(hexUUID, -3)
+        self.assertTrue(update_result, "Deadline update should return True")
+
+        newDeadline = self.database.getTasksTupleList()[0][4]
+        print(newDeadline)
+        self.assertNotEqual(oldDeadline, newDeadline)
+        self.assertLess(newDeadline, oldDeadline)
+
+    def test_update_task_estimated_deadline_zero(self):
+        self._assert_tasks_count(0)
+        result = self.database.addTask("title", "desc", 1)
+        hexUUID = result[0]
+        self._assert_tasks_count(1)
+
+        oldDeadline = self.database.getTasksTupleList()[0][4]
+
+        update_result = self.database.updateTaskEstimatedDeadline(hexUUID, 0)
+        self.assertTrue(update_result, "Deadline update should return True")
+
+        newDeadline = self.database.getTasksTupleList()[0][4]
+        self.assertEqual(oldDeadline, newDeadline)
