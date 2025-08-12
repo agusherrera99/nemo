@@ -7,6 +7,29 @@ from typing import Optional
 from src.database import Database
 
 
+def formatEstimatedDeadline(estimatedDeadline: str) -> str:
+    estimatedDeadlineDatetime = datetime.strptime(
+        estimatedDeadline, "%Y-%m-%d %H:%M:%S.%f"
+    )
+    formatedEstimatedDeadline = datetime.strftime(
+        estimatedDeadlineDatetime, "%d/%m/%Y %H:%M:%S"
+    )
+    return formatedEstimatedDeadline
+
+
+def colorize(text: str, color: str) -> str:
+    colors = {
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+        "red": "\033[91m",
+        "blue": "\033[94m",
+        "reset": "\033[0m",
+        "cyan": "\033[96m",
+        "magenta": "\033[95m",
+    }
+    return f"{colors.get(color, '')}{text}{colors['reset']}"
+
+
 class Interface:
     def __init__(self) -> None:
         self.database = Database()
@@ -36,25 +59,22 @@ class Interface:
         addSubparser.add_argument(
             "--et",
             type=str,
-            help="Estimated task time expressed in days from now; e.g nemo add --et 5 (in 5 days)"
+            help="Estimated task time expressed in days from now; e.g nemo add --et 5 (in 5 days)",
         )
 
     def _setupDelete(self):
-        deleteSubparser = self.subparsers.add_parser("delete", help="Delete one task at a time or all of them")
-        
-        group = deleteSubparser.add_mutually_exclusive_group(required=True)
-        
-        group.add_argument(
-            "-a",
-            "--all",
-            action="store_true",
-            help="Delete all tasks"
+        deleteSubparser = self.subparsers.add_parser(
+            "delete", help="Delete one task at a time or all of them"
         )
+
+        group = deleteSubparser.add_mutually_exclusive_group(required=True)
+
+        group.add_argument("-a", "--all", action="store_true", help="Delete all tasks")
         group.add_argument(
             "-u",
             "--uuid",
             type=str,
-            help='Delete a task by passing his UUID; nemo delete -u "98c6078d"'
+            help='Delete a task by passing his UUID; nemo delete -u "98c6078d"',
         )
 
     def _setupUpdate(self):
@@ -65,28 +85,28 @@ class Interface:
             "--uuid",
             type=str,
             required=True,
-            help='Indicate the task to update by its UUID; nemo update -u "2a712be5"'
+            help='Indicate the task to update by its UUID; nemo update -u "2a712be5"',
         )
 
         updateSubparser.add_argument(
             "-t",
             "--title",
             type=str,
-            help="Update the title of a task; nemo update -u '2a712be5' -t 'New title'"
+            help="Update the title of a task; nemo update -u '2a712be5' -t 'New title'",
         )
 
         updateSubparser.add_argument(
             "-d",
             "--description",
             type=str,
-            help="Update the description of a task; nemo update -u '2a712be5' -d 'New description'"
+            help="Update the description of a task; nemo update -u '2a712be5' -d 'New description'",
         )
 
         updateSubparser.add_argument(
             "-s",
             "--state",
             choices=["completed", "incompleted", "in_progress"],
-            help="Update the state of a task; nemo update -u '2a712be5' -s in_progress"
+            help="Update the state of a task; nemo update -u '2a712be5' -s in_progress",
         )
 
     def _setupArguments(self):
@@ -103,29 +123,33 @@ class Interface:
         taskTupleList = self.database.getTasksTupleList()
         taskTupleListLength = len(taskTupleList)
 
-        pinMap = {0: "Unpinned", 1: "Pinned"}
-        statusMap = {0: "Incompleted", 1: "Completed", 2: "In progress"}
+        pinMap = {0: colorize("Unpinned", "yellow"), 1: colorize("Pinned", "magenta")}
+        statusMap = {
+            0: colorize("Incompleted", "red"),
+            1: colorize("Completed", "green"),
+            2: colorize("In progress", "blue"),
+        }
 
         if taskTupleListLength > 0:
             for taskTuple in taskTupleList:
                 _, hexUUID, title, description, estimatedDeadline, pinState, status = taskTuple
-                pinParse = pinMap.get(pinState, "Unknown")
-                statusParse = statusMap.get(status, "Unknown")
-                
-                header = f"- {title.capitalize()} | {statusParse} | {pinParse} | #{hexUUID}"
+                pinParse = pinMap.get(pinState, colorize("Unknown", "red"))
+                statusParse = statusMap.get(status, colorize("Unknown", "red"))
+
+                header = f"{colorize(title.capitalize(), 'cyan'):<20} | {statusParse:<15} | {pinParse:<10}"
                 if estimatedDeadline:
-                    estimatedDeadlineDatetime = datetime.strptime(estimatedDeadline, "%Y-%m-%d %H:%M:%S.%f")
-                    formatedEstimatedDeadline = datetime.strftime(estimatedDeadlineDatetime, "%d/%m/%Y %H:%M:%S")
-                    header += f" | {formatedEstimatedDeadline}"
+                    formatedEstimatedDeadline = formatEstimatedDeadline(estimatedDeadline)
+                    header += f" | {colorize(formatedEstimatedDeadline, 'blue')}"
+                header += f" | {colorize('#' + hexUUID, 'magenta')}"
                 print(header)
-                print(f"\t{description.capitalize()}\n")
+                print(f"\t{colorize(description.capitalize(), 'reset')}\n")
         else:
-            print("There are not registered tasks")
+            print(colorize("There are not registered tasks", "yellow"))
 
     def _handleAdd(self, args: Namespace):
         title: str = args.title.lower()
         description: str = args.description.lower()
-        estimatedDeadline = int(args.et)            
+        estimatedDeadline = int(args.et)
 
         print(f"Adding task: {title.capitalize()} {description.capitalize()}...")
         result = self.database.addTask(title, description, estimatedDeadline)
@@ -163,15 +187,21 @@ class Interface:
             if success:
                 print("Title updated successfully")
             else:
-                print("Has occurred an error when update the title task, please try again")
+                print(
+                    "Has occurred an error when update the title task, please try again"
+                )
         elif args.description:
             newDescription: str = args.description
             print(f"Updating description of task: {hexUUID}...")
-            success = self.database.updateTaskDescription(hexUUID, newDescription.lower())
+            success = self.database.updateTaskDescription(
+                hexUUID, newDescription.lower()
+            )
             if success:
                 print("Description updated successfully")
             else:
-                print("Has occurred an error when update the description task, please try again")
+                print(
+                    "Has occurred an error when update the description task, please try again"
+                )
         elif args.state:
             newState: str = args.state
             print(f"Updating state of task: {hexUUID}...")
@@ -179,7 +209,9 @@ class Interface:
             if success:
                 print("State updated successfully")
             else:
-                print("Has occurred an error when update the state task, please try again")
+                print(
+                    "Has occurred an error when update the state task, please try again"
+                )
 
     def parseArgs(self, args: Optional[Sequence[str]] = None):
         return self.parser.parse_args(args)
